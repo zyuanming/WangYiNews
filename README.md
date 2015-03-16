@@ -8,6 +8,7 @@
 ## Resources 
 
 https://github.com/lukescott/DraggableCollectionView
+
 https://github.com/min/MNPageViewController
 
 ## License
