@@ -27,4 +27,43 @@ static NSString * ChannelNameKey = @"channelName";
     [aCoder encodeObject:_channelName forKey:ChannelNameKey];
 }
 
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"<%@: %p, %@>",
+            [self class],
+            self,
+            @{@"channel name":_channelName,
+              @"id":_itemId}];
+}
+
+- (NSUInteger)hash
+{
+    NSUInteger channelNameHash = [_channelName hash];
+    NSUInteger itemIdHash = [_itemId integerValue];
+    return channelNameHash ^ itemIdHash;
+}
+
+- (BOOL)isEqual:(id)object
+{
+    if ([self class] == [object class]) {
+        return [self isEqualToChannelItem:(ChannelItem *)object];
+    } else {
+        return [super isEqual:object];
+    }
+}
+
+- (BOOL)isEqualToChannelItem:(ChannelItem *)otherItem
+{
+    if (self == otherItem) {
+        return YES;
+    }
+    if (![_channelName isEqualToString:otherItem.channelName]) {
+        return NO;
+    }
+    if (![_itemId isEqualToString:otherItem.itemId]) {
+        return NO;
+    }
+    return YES;
+}
+
 @end

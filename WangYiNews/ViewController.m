@@ -22,6 +22,7 @@
 @property (nonatomic, strong) ChannelHeaderCollectionReusableView *channelHeaderView;
 @property (nonatomic, copy) NSArray *usingChannelList;
 @property (nonatomic, strong) ChannelItem *currentSelectedChannel;
+@property (nonatomic, strong) UIButton *arrowButton;
 
 @end
 
@@ -81,12 +82,14 @@
     self.pagesContainer.channelList = _usingChannelList;
     
     /// 打开编辑菜单按钮
-    UIButton *arrowButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    arrowButton.frame = CGRectMake(CGRectGetWidth(self.view.frame)-40, 0, 40, self.pagesContainer.topBarHeight);
-    [arrowButton setImage:[UIImage imageNamed:@"channel_nav_arrow"] forState:UIControlStateNormal];
-    arrowButton.backgroundColor = [UIColor whiteColor];
-    [self.view addSubview:arrowButton];
-    [arrowButton addTarget:self action:@selector(toggleChannelEdit:) forControlEvents:UIControlEventTouchUpInside];
+    self.arrowButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    _arrowButton.frame = CGRectMake(CGRectGetWidth(self.view.frame)-40, 0, 40, self.pagesContainer.topBarHeight);
+    [_arrowButton setImage:[UIImage imageNamed:@"channel_nav_arrow"] forState:UIControlStateNormal];
+    _arrowButton.backgroundColor = [UIColor whiteColor];
+    _arrowButton.layer.shadowOpacity = 1;
+    _arrowButton.layer.shadowPath = [UIBezierPath bezierPathWithRect:CGRectMake(0, CGRectGetHeight(_arrowButton.frame) - 1, CGRectGetWidth(_arrowButton.frame), 2)].CGPath;
+    [self.view addSubview:_arrowButton];
+    [_arrowButton addTarget:self action:@selector(toggleChannelEdit:) forControlEvents:UIControlEventTouchUpInside];
     
 }
 
@@ -105,16 +108,6 @@
     /// 关闭编辑视图
     
     if (self.channelHeaderView.alpha == 1.0) {
-        [UIView animateWithDuration:0.5 animations:^{
-            button.imageView.transform = CGAffineTransformMakeRotation(2*M_PI);
-        }];
-        NSArray *tmpArray = [self.channelEditViewController getSelectedChannel];
-        if (![self channelList:tmpArray isEqualTo:self.usingChannelList]) {
-            self.pagesContainer.channelList = tmpArray;
-            self.usingChannelList = [NSArray arrayWithArray:tmpArray];
-            NSInteger currentIndex = [self getCurrentIndexWithCurrentChannel:self.currentSelectedChannel];
-            [self.pagesContainer setSelectedIndex:currentIndex];
-        }
         [self hideChannelEditVC];
         return;
     }
@@ -143,12 +136,15 @@
         [self.channelEditViewController didMoveToParentViewController:self.pagesContainer];
     }
     
+
+    [self.channelEditViewController.collectionView reloadData];
+    
     /// 构造编辑视图显示时上面的头部视图
     if (!_channelHeaderView) {
         self.channelHeaderView = [[NSBundle mainBundle]loadNibNamed:@"ChannelHeaderCollectionReusableView" owner:self options:0][0];
         self.channelHeaderView.alpha = 0.0;
         self.channelHeaderView.leftLabel.text = @"已添加标签";
-        self.channelHeaderView.tipsLabel.text = @"(点击删除)";
+        self.channelHeaderView.tipsLabel.text = @"(长按可排序、删除)";
         self.channelHeaderView.frame = self.pagesContainer.topBar.bounds;
         [self.view addSubview:self.channelHeaderView];
     }
@@ -167,10 +163,19 @@
 - (void)hideChannelEditVC
 {
     [UIView animateWithDuration:0.5 animations:^{
+        _arrowButton.imageView.transform = CGAffineTransformMakeRotation(2*M_PI);
+    }];
+    [self refreshUsingItem];
+    NSInteger currentIndex = [self getCurrentIndexWithCurrentChannel:self.currentSelectedChannel];
+    [self.pagesContainer setSelectedIndex:currentIndex];
+    
+    [UIView animateWithDuration:0.5 animations:^{
         self.channelEditViewController.view.frame = CGRectMake(0, -CGRectGetHeight(self.view.frame)+self.pagesContainer.topBarHeight, CGRectGetWidth(self.view.frame), CGRectGetHeight(self.view.frame));
         self.channelHeaderView.alpha = 0.0;
         self.touchView.hidden = YES;
-    } completion:NULL];
+    } completion:^(BOOL finished) {
+        [self.channelEditViewController.collectionView reloadData];
+    }];
 }
 
 
@@ -187,19 +192,15 @@
     return 0;
 }
 
-- (BOOL)channelList:(NSArray *)toList isEqualTo:(NSArray *)fromList
+- (void)refreshUsingItem
 {
-    if (toList.count != fromList.count) {
-        return NO;
+    NSArray *tmpArray = self.channelEditViewController.selectedChannels;
+    if (![tmpArray isEqualToArray:self.usingChannelList]) {
+        self.pagesContainer.channelList = tmpArray;
+        self.usingChannelList = [NSArray arrayWithArray:tmpArray];
+
+        // TODO save current selected channel list
     }
-    for (int i = 0; i < toList.count; i++) {
-        ChannelItem *toItem = toList[i];
-        ChannelItem *fromItem  = fromList[i];
-        if (toItem.itemId != fromItem.itemId) {
-            return NO;
-        }
-    }
-    return YES;
 }
 
 @end

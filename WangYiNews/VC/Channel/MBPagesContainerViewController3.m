@@ -16,7 +16,7 @@
 #define PageIndicatorViewHeight 2.0
 
 @interface MBPagesContainerViewController3 () <MBPagesContainerTopBarDelegate,
-  UIPageViewControllerDelegate, UIScrollViewDelegate, MNPageViewControllerDelegate>
+UIPageViewControllerDelegate, UIScrollViewDelegate, MNPageViewControllerDelegate>
 
 @property (strong, nonatomic) UIScrollView *scrollView;
 @property (assign, nonatomic) BOOL shouldObserveContentOffset;
@@ -123,13 +123,13 @@
 
 - (void)setSelectedIndex:(NSUInteger)selectedIndex animated:(BOOL)animated
 {
-    UIButton *previosSelectdItem = self.topBar.itemViews[self.selectedIndex];
+    UIButton *previosSelectdItem;
+    if (_selectedIndex < self.topBar.itemViews.count) {
+        previosSelectdItem = self.topBar.itemViews[self.selectedIndex];
+    }
     UIButton *nextSelectdItem = self.topBar.itemViews[selectedIndex];
     self.shouldObserveContentOffset = NO;
     
-    UIViewController *selectedVC = [self.modelController viewControllerAtIndex:selectedIndex storyboard:nil];
-    [self.pageViewController jumpToViewController:selectedVC];
-
     [UIView animateWithDuration:0.3 delay:0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
         if (_canChangePageIndicatorSize) {
             CGRect pageIndicatorFrame = self.pageIndicatorView.frame;
@@ -139,7 +139,6 @@
         }
         self.pageIndicatorView.center = CGPointMake([self.topBar centerForSelectedItemAtIndex:selectedIndex].x,
                                                     [self pageIndicatorCenterY]);
-        [self.topBar scrollToCenter:selectedIndex];
         if (_canChangePageIndicatorTextColor) {
             [previosSelectdItem setTitleColor:[UIColor grayColor] forState:UIControlStateNormal];
             [nextSelectdItem setTitleColor:self.selectedPageItemTitleColor forState:UIControlStateNormal];
@@ -147,6 +146,10 @@
     } completion:^(BOOL finished) {
         self.shouldObserveContentOffset = YES;
     }];
+    [self.topBar scrollToCenter:selectedIndex];
+    
+    UIViewController *selectedVC = [self.modelController viewControllerAtIndex:selectedIndex storyboard:nil];
+    [self.pageViewController jumpToViewController:selectedVC];
     
     _selectedIndex = selectedIndex;
 }
@@ -156,7 +159,8 @@
     [self layoutSubviews];
 }
 
-#pragma mark * Overwritten setters
+
+#pragma mark - Setter
 
 - (void)setSelectedIndex:(NSUInteger)selectedIndex
 {
@@ -198,7 +202,6 @@
     self.topBar.font = font;
 }
 
-
 - (void)setChannelList:(NSArray *)channelList
 {
     if (_channelList != channelList) {
@@ -210,15 +213,11 @@
         }
         self.titles = [NSArray arrayWithArray:tmpArray];
         self.topBar.itemTitles = _titles;
-        
-        _selectedIndex = 0;
-
-        [self layoutSubviews];
-        self.pageIndicatorView.center = CGPointMake([self.topBar centerForSelectedItemAtIndex:self.selectedIndex].x,
+        self.pageIndicatorView.center = CGPointMake([self.topBar centerForSelectedItemAtIndex:0].x,
                                                     [self pageIndicatorCenterY]);
         self.modelController.channelList = _channelList;
         [self.topBar.scrollView addSubview:_pageIndicatorView];
-        [self setSelectedIndex:_selectedIndex];
+        [self setSelectedIndex:0];
     }
 }
 
@@ -265,17 +264,7 @@
     if (!_isTopBarInNavigationBar) {
         self.topBar.frame = CGRectMake(0., 0., CGRectGetWidth(self.topBar.frame), self.topBarHeight);
     }
-    CGRect pageIndicatorFrame = self.pageIndicatorView.frame;
-    NSString *selectedTitle = [_titles objectAtIndex:_selectedIndex];
-    CGSize titleSize = [selectedTitle sizeWithFont:self.topBar.font];
-    pageIndicatorFrame.size.width = titleSize.width;
-    pageIndicatorFrame.size.height = PageIndicatorViewHeight;
-    self.pageIndicatorView.frame = pageIndicatorFrame;
-    
-    self.pageIndicatorView.center = CGPointMake([self.topBar centerForSelectedItemAtIndex:self.selectedIndex].x,
-                                                [self pageIndicatorCenterY]);
     [self.topBar scrollToCenter:_selectedIndex];
-    
 }
 
 - (CGFloat)pageIndicatorCenterY
@@ -361,15 +350,15 @@
             }
             
             if (scrollingTowards) {
-//                self.topBar.scrollView.contentOffset = CGPointMake(previousItemContentOffsetX +
-//                                                                   (nextItemContentOffsetX - previousItemContentOffsetX) * ratio , 0.);
+                //                self.topBar.scrollView.contentOffset = CGPointMake(previousItemContentOffsetX +
+                //                                                                   (nextItemContentOffsetX - previousItemContentOffsetX) * ratio , 0.);
                 self.pageIndicatorView.center = CGPointMake(previousItemPageIndicatorX +
                                                             (nextItemPageIndicatorX - previousItemPageIndicatorX) * ratio,
                                                             [self pageIndicatorCenterY]);
                 
             } else {
-//                self.topBar.scrollView.contentOffset = CGPointMake(previousItemContentOffsetX -
-//                                                                   (nextItemContentOffsetX - previousItemContentOffsetX) * ratio , 0.);
+                //                self.topBar.scrollView.contentOffset = CGPointMake(previousItemContentOffsetX -
+                //                                                                   (nextItemContentOffsetX - previousItemContentOffsetX) * ratio , 0.);
                 self.pageIndicatorView.center = CGPointMake(previousItemPageIndicatorX -
                                                             (nextItemPageIndicatorX - previousItemPageIndicatorX) * ratio,
                                                             [self pageIndicatorCenterY]);
@@ -421,6 +410,5 @@
     }
     return _modelController;
 }
-
 
 @end

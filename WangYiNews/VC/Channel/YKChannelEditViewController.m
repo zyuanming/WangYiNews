@@ -213,7 +213,7 @@ static NSString * const ChannelBottomCollectionViewCellIdentifier = @"ChannelBot
 
 #pragma mark -
 
-- (NSArray *)getSelectedChannel
+- (NSArray *)selectedChannels
 {
     return [NSArray arrayWithArray:self.channelData[0]];
 }

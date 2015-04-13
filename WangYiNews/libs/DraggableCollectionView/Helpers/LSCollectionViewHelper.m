@@ -252,6 +252,10 @@ typedef NS_ENUM(NSInteger, _ScrollingDirection) {
             self.layoutHelper.hideIndexPath = indexPath;
             self.layoutHelper.toIndexPath = indexPath;
             [self.collectionView.collectionViewLayout invalidateLayout];
+            if ([self.collectionView.dataSource respondsToSelector:@selector(collectionView:didLongPressItemAtIndexPath:)]) {
+                [(id<UICollectionViewDataSource_Draggable>)self.collectionView.dataSource collectionView:self.collectionView
+                                                                             didLongPressItemAtIndexPath:indexPath];
+            }
         } break;
         case UIGestureRecognizerStateEnded:
         case UIGestureRecognizerStateCancelled: {

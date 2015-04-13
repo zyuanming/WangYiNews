@@ -15,7 +15,6 @@ static NSString * const LeftChannelListCacheKey = @"LeftChannelListCacheKey";
 @interface YKChannelEditViewController : UIViewController
 
 @property (nonatomic, strong) UICollectionView *collectionView;
-
-- (NSArray *)getSelectedChannel;
+@property (nonatomic, strong, readonly) NSArray *selectedChannels;
 
 @end

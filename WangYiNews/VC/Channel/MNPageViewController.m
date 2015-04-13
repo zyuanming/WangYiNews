@@ -50,7 +50,7 @@
         CGRect bounds = self.view.bounds;
         bounds.origin.x = bounds.size.width;
         
-//        [self.viewController willMoveToParentViewController:self];
+        [self.viewController willMoveToParentViewController:self];
         [self addChildViewController:self.viewController];
         [self.scrollView addSubview:self.viewController.view];
         self.viewController.view.frame = bounds;
@@ -272,7 +272,6 @@
     self.scrollView.contentInset = UIEdgeInsetsMake(0.f, self.leftInset, 0.f, self.rightInset);
     
     [self setNeedsRatioReset];
-//    [self setNeedsStatusBarAppearanceUpdate];
 }
 
 
@@ -380,7 +379,11 @@
 
 - (void)jumpToViewController:(UIViewController *)viewController
 {
-    CGRect currentFrame = self.viewController.view.frame;
+    CGRect currentFrame = self.view.bounds;
+    currentFrame.origin.x = currentFrame.size.width;
+    if (self.viewController) {
+        currentFrame = self.viewController.view.frame;
+    }
     
     [self.viewController willMoveToParentViewController:nil];
     [self.viewController.view removeFromSuperview];
@@ -392,7 +395,7 @@
     [self.beforeController.view removeFromSuperview];
     [self.beforeController removeFromParentViewController];
     
-    _viewController = viewController;
+    self.viewController = viewController;
     [self addChildViewController:self.viewController];
     [self.scrollView addSubview:self.viewController.view];
     self.viewController.view.frame = currentFrame;

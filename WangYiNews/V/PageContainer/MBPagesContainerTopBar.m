@@ -39,6 +39,7 @@
         _font = [UIFont systemFontOfSize:18];
         _itemTitleColor = [UIColor whiteColor];
         
+        self.layer.shadowOpacity = 1;
     }
     return self;
 }
