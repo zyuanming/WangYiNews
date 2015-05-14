@@ -17,12 +17,14 @@
 #import "ColorConst.h"
 
 static NSString * const ChannelHeaderCollectionReusableViewIdentifier = @"ChannelHeaderCollectionReusableView";
+NSString * const UsingChannelListCacheKey = @"UsingChannelListCacheKey";
+NSString * const LeftChannelListCacheKey = @"LeftChannelListCacheKey";
 static NSString * const ChannelTopCollectionViewCellIdentifier = @"ChannelTopCollectionViewCell";
 static NSString * const ChannelBottomCollectionViewCellIdentifier = @"ChannelBottomCollectionViewCell";
 
 @interface YKChannelEditViewController ()<UICollectionViewDataSource_Draggable, UICollectionViewDelegateFlowLayout, ChannelBottomCollectionViewCellDelegate>
 
-@property (nonatomic, strong) NSMutableArray *channelData;
+@property (nonatomic, strong) NSMutableDictionary *channelData;
 
 @end
 
@@ -46,13 +48,17 @@ static NSString * const ChannelBottomCollectionViewCellIdentifier = @"ChannelBot
     [self.view addSubview:self.collectionView];
     
     NSData *tmpData = [[NSUserDefaults standardUserDefaults] objectForKey:UsingChannelListCacheKey];
-    NSMutableArray *tmpArray1 = [[NSKeyedUnarchiver unarchiveObjectWithData:tmpData] mutableCopy];
+    NSMutableArray *usingChannelList = [[NSKeyedUnarchiver unarchiveObjectWithData:tmpData] mutableCopy];
     tmpData = [[NSUserDefaults standardUserDefaults] objectForKey:LeftChannelListCacheKey];
-    NSMutableArray *tmpArray2 = [[NSKeyedUnarchiver unarchiveObjectWithData:tmpData] mutableCopy];
+    NSMutableArray *leftChannelList = [[NSKeyedUnarchiver unarchiveObjectWithData:tmpData] mutableCopy];
 
-    self.channelData = [NSMutableArray array];
-    [self.channelData addObject:tmpArray1];
-    [self.channelData addObject:tmpArray2];
+    _channelData = [NSMutableDictionary dictionary];
+    if (usingChannelList) {
+        [_channelData setObject:usingChannelList forKey:@(0)];
+    }
+    if (leftChannelList) {
+        [_channelData setObject:leftChannelList forKey:@(1)];
+    }
 }
 
 - (void)didReceiveMemoryWarning {
@@ -65,13 +71,13 @@ static NSString * const ChannelBottomCollectionViewCellIdentifier = @"ChannelBot
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
 {
-    NSInteger count = [self.channelData[section] count];
-    return count;
+    NSArray *channelList = _channelData[@(section)];
+    return channelList.count;
 }
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath
 {
-    NSMutableArray *channelList = self.channelData[indexPath.section];
+    NSArray *channelList = _channelData[@(indexPath.section)];
     ChannelItem *item = channelList[indexPath.item];
     if (indexPath.section == 0) {
         ChannelTopCollectionViewCell *topCell = [collectionView dequeueReusableCellWithReuseIdentifier:ChannelTopCollectionViewCellIdentifier
@@ -126,7 +132,7 @@ static NSString * const ChannelBottomCollectionViewCellIdentifier = @"ChannelBot
 - (UIEdgeInsets)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout insetForSectionAtIndex:(NSInteger)section
 {
     if (section == 0) {
-        return UIEdgeInsetsMake(8, 8, 8, 8);
+        return UIEdgeInsetsMake(8, 3, 8, 3);
     } else {
         return UIEdgeInsetsMake(0, 8, 0, 8);
     }
@@ -157,12 +163,15 @@ static NSString * const ChannelBottomCollectionViewCellIdentifier = @"ChannelBot
 
 - (void)collectionView:(UICollectionView *)collectionView moveItemAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath
 {
-    NSMutableArray *data1 = [self.channelData objectAtIndex:fromIndexPath.section];
-    NSMutableArray *data2 = [self.channelData objectAtIndex:toIndexPath.section];
+    NSMutableArray *data1 = [_channelData[@(fromIndexPath.section)] mutableCopy];
     id index = [data1 objectAtIndex:fromIndexPath.item];
-    
     [data1 removeObjectAtIndex:fromIndexPath.item];
+    [_channelData setObject:[data1 copy] forKey:@(fromIndexPath.section)];
+    
+    
+    NSMutableArray *data2 = [_channelData[@(toIndexPath.section)] mutableCopy];
     [data2 insertObject:index atIndex:toIndexPath.item];
+    [_channelData setObject:[data2 copy] forKey:@(toIndexPath.section)];
 }
 
 - (BOOL)collectionView:(UICollectionView *)collectionView canMoveItemAtIndexPath:(NSIndexPath *)indexPath
@@ -202,7 +211,8 @@ static NSString * const ChannelBottomCollectionViewCellIdentifier = @"ChannelBot
 
 - (void)collectionCell:(ChannelBottomCollectionViewCell *)collectionCell didClickAddAtIndexPath:(NSIndexPath *)indexPath
 {
-    NSIndexPath *targetIndexPath = [NSIndexPath indexPathForItem:[self.channelData[0] count] inSection:0];
+    NSArray *channelList = _channelData[@0];
+    NSIndexPath *targetIndexPath = [NSIndexPath indexPathForItem:channelList.count inSection:0];
     [self collectionView:self.collectionView moveItemAtIndexPath:indexPath toIndexPath:targetIndexPath];
     [self.collectionView performBatchUpdates:^{
         [self.collectionView moveItemAtIndexPath:indexPath toIndexPath:targetIndexPath];
@@ -215,7 +225,8 @@ static NSString * const ChannelBottomCollectionViewCellIdentifier = @"ChannelBot
 
 - (NSArray *)selectedChannels
 {
-    return [NSArray arrayWithArray:self.channelData[0]];
+    NSArray *channelList = _channelData[@0];
+    return channelList;
 }
 
 

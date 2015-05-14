@@ -9,8 +9,8 @@
 #import <UIKit/UIKit.h>
 
 static const CGFloat SectionViewHeight = 35.;
-static NSString * const UsingChannelListCacheKey = @"UsingChannelListCacheKey";
-static NSString * const LeftChannelListCacheKey = @"LeftChannelListCacheKey";
+extern NSString * const UsingChannelListCacheKey;
+extern NSString * const LeftChannelListCacheKey;
 
 @interface YKChannelEditViewController : UIViewController
 
